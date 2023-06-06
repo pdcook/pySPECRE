@@ -36,4 +36,4 @@ in the project's main directory.
 Contributing
 ============
 
-To install the pre-commit hooks, simply install pre-commit with `pip3 install pre-commit` (or use `pip`), then in this repository `pre-commit install` followed by `pre-commit run --all-files`.
+To install the pre-commit hooks, simply install pre-commit with ``pip3 install pre-commit`` (or use ``pip``), then in this repository ``pre-commit install`` followed by ``pre-commit run --all-files``.
