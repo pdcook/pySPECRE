@@ -58,12 +58,12 @@ def _is_1D_array(arr: np.ndarray) -> bool:
 @multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-    dr: float,
-    di: float,
-    rmin: float,
-    rmax: float,
-    imin: float,
-    imax: float,
+    dr: Union[float, int],
+    di: Union[float, int],
+    rmin: Union[float, int],
+    rmax: Union[float, int],
+    imin: Union[float, int],
+    imax: Union[float, int],
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -241,9 +241,11 @@ def SPECRE(
 
     # figure out which axis C is changing along
     if d.real == 0:
+        real_only = False
         di = d.imag
         dr = _DEFAULT_DR
     else:
+        real_only = True
         dr = d.real
         di = _DEFAULT_DI
 
@@ -256,7 +258,10 @@ def SPECRE(
     # pass to core
     C, ws, vs = _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
 
-    # TODO: figure out reshaping here
+    if real_only:
+        return C[:, 0], ws[:, 0, :], vs[:, 0, :, :]
+    else:
+        return C[0, :], ws[0, :, :], vs[0, :, :, :]
 
 
 @multimethod
