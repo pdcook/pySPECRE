@@ -4,7 +4,7 @@ import numpy as np
 import scipy.linalg as scln
 import scipy.sparse as sp
 import scipy.sparse.linalg as spln
-from multimethod import overload
+from multimethod import multimethod
 
 """
     TODO:
@@ -50,12 +50,12 @@ def _is_1D_array(arr: np.ndarray) -> bool:
 
 
 """
-    All SPECRE overloads convert the input form to a meshgrid to pass to the
+    All SPECRE multimethods convert the input form to a meshgrid to pass to the
     core function, then reshape the output to the input form.
 """
 
 
-@overload
+@multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
     dr: float,
@@ -108,10 +108,10 @@ def SPECRE(
     return _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
 
 
-@overload
+@multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-    C: _is_2D_array,
+    C: np.ndarray,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -142,6 +142,10 @@ def SPECRE(
     vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
         by vs[real_idx, imag_idx, :, eigenvector_idx]
     """
+
+    # assert that C is 2D
+    if not _is_2D_array(C):
+        raise ValueError("C must be a 2D array")
 
     # verify that the stepsizes along each axis are constant, but not
     # necessarily the same
@@ -184,10 +188,10 @@ def SPECRE(
     return C, ws, vs
 
 
-@overload
+@multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-    C: _is_1D_array,
+    C: np.ndarray,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -217,6 +221,10 @@ def SPECRE(
     vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
         by vs[real_idx, imag_idx, :, eigenvector_idx]
     """
+
+    # assert that C is 1D
+    if not _is_1D_array(C):
+        raise ValueError("C must be a 1D array")
 
     # verify that the stepsize is constant
     d = np.diff(C)
@@ -251,11 +259,11 @@ def SPECRE(
     # TODO: figure out reshaping here
 
 
-@overload
+@multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-    C_R: _is_2D_array,
-    C_I: _is_2D_array,
+    C_R: np.ndarray,
+    C_I: np.ndarray,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -288,6 +296,10 @@ def SPECRE(
     vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
         by vs[real_idx, imag_idx, :, eigenvector_idx]
     """
+
+    # assert that C_R and C_I are 2D
+    if not _is_2D_array(C_R) or not _is_2D_array(C_I):
+        raise ValueError("C_R and C_I must be 2D arrays")
 
     # verify that the stepsizes along each axis are constant, but not
     # necessarily the same
@@ -335,11 +347,11 @@ def SPECRE(
     return C, ws, vs
 
 
-@overload
+@multimethod
 def SPECRE(
     A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-    c_R: _is_1D_array,
-    c_I: _is_1D_array,
+    c_R: np.ndarray,
+    c_I: np.ndarray,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -370,6 +382,10 @@ def SPECRE(
     vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
         by vs[real_idx, imag_idx, :, eigenvector_idx]
     """
+
+    # assert that c_R and c_I are 1D
+    if not _is_1D_array(c_R) or not _is_1D_array(c_I):
+        raise ValueError("c_R and c_I must be 1D arrays")
 
     # verify that the stepsize is constant
     dr = np.diff(c_R)
@@ -404,9 +420,9 @@ def _SPECRE_core(
     if dr <= 0 or di <= 0:
         raise ValueError("dr and di must be greater than zero")
 
-    # verify that rmin < rmax and imin < imax
-    if rmin >= rmax or imin >= imax:
-        raise ValueError("rmin < rmax and imin < imax must be true")
+    # verify that rmin <= rmax and imin <= imax
+    if rmin > rmax or imin > imax:
+        raise ValueError("rmin <= rmax and imin <= imax must be true")
 
     N = A(0).shape[0]
 
