@@ -1,3 +1,4 @@
+import itertools
 from typing import Callable, Tuple, Union
 
 import numpy as np
@@ -67,6 +68,7 @@ def SPECRE(
     rmax: Union[float, int],
     imin: Union[float, int],
     imax: Union[float, int],
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -92,6 +94,9 @@ def SPECRE(
 
     imax : float - the maximum value of the imaginary part of c
 
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
+
     *args, **kwargs : additional arguments to pass to the eigensolver
 
     Returns
@@ -108,7 +113,7 @@ def SPECRE(
     """
 
     # can be passed as-is to core
-    return _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
+    return _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs)
 
 
 @multimethod
@@ -118,6 +123,7 @@ def SPECRE(
         Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
     ],
     C: np.ndarray,
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -133,6 +139,9 @@ def SPECRE(
     C : np.ndarray - a 2D array of complex numbers, one axis for the real part
         and one axis for the imaginary part. Either axis can be the real or
         imaginary one.
+
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
 
     *args, **kwargs : additional arguments to pass to the eigensolver
 
@@ -183,7 +192,9 @@ def SPECRE(
     imin, imax = C.imag.min(), C.imag.max()
 
     # pass to core
-    C, ws, vs = _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
+    C, ws, vs = _SPECRE_core(
+        A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs
+    )
 
     # transpose back if necessary
     if transposed:
@@ -201,6 +212,7 @@ def SPECRE(
         Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
     ],
     C: np.ndarray,
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -215,6 +227,9 @@ def SPECRE(
 
     C : np.ndarray - a 1D array of complex numbers, changing only along either
         the real or imaginary axis, not both.
+
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
 
     *args, **kwargs : additional arguments to pass to the eigensolver
 
@@ -265,7 +280,9 @@ def SPECRE(
     imin, imax = C.imag.min(), C.imag.max()
 
     # pass to core
-    C, ws, vs = _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
+    C, ws, vs = _SPECRE_core(
+        A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs
+    )
 
     if real_only:
         return C[:, 0], ws[:, 0, :], vs[:, 0, :, :]
@@ -281,6 +298,7 @@ def SPECRE(
     ],
     C_R: np.ndarray,
     C_I: np.ndarray,
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -298,6 +316,9 @@ def SPECRE(
 
     C_I : np.ndarray - a 2D meshgrid of the C values, changing along the
         imaginary axis
+
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
 
     *args, **kwargs : additional arguments to pass to the eigensolver
 
@@ -354,7 +375,9 @@ def SPECRE(
     imin, imax = C_I.imag.min(), C_I.imag.max()
 
     # pass to core
-    C, ws, vs = _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
+    C, ws, vs = _SPECRE_core(
+        A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs
+    )
 
     if transposed:
         C = C.T
@@ -372,6 +395,7 @@ def SPECRE(
     ],
     c_R: np.ndarray,
     c_I: np.ndarray,
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -387,6 +411,9 @@ def SPECRE(
     c_R : np.ndarray - a 1D array of the real part of the C values
 
     c_I : np.ndarray - a 1D array of the imaginary part of the C values
+
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
 
     *args, **kwargs : additional arguments to pass to the eigensolver
 
@@ -421,7 +448,7 @@ def SPECRE(
     imin, imax = c_I.min(), c_I.max()
 
     # pass to core
-    return _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, *args, **kwargs)
+    return _SPECRE_core(A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs)
 
 
 def _SPECRE_core(
@@ -435,6 +462,7 @@ def _SPECRE_core(
     rmax: float,
     imin: float,
     imax: float,
+    horizontal: bool = True,
     *args,
     **kwargs
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -494,36 +522,45 @@ def _SPECRE_core(
 
         return CR_residue
 
+    i_range = range(1, n - 1)
+    j_range = range(m - 1)
+
+    # sweep direction
+    if horizontal:
+        ij_iter = itertools.product(j_range, i_range)
+    else:
+        ij_iter = itertools.product(i_range, j_range)
+
     # sort eigenvalues by SPECRE
-    for j in range(m - 1):  # vertical sweep
-        for i in range(1, n - 1):  # horizontal sweep
-            # sorting in the real direction
-            sort_idx_l = [None for _ in range(N)]
-            # sorting in the imaginary direction
-            sort_idx_k = [None for _ in range(N)]
-            for p in range(N):
-                min_cost = np.inf
-                min_k = None
-                min_l = None
-                for k in range(N):
-                    for l in range(N):
-                        c_ = cost(i, j, k, l, p)
-                        if (
-                            c_ < min_cost
-                            and k not in sort_idx_k
-                            and l not in sort_idx_l
-                        ):
-                            min_cost = c_
-                            min_k = k
-                            min_l = l
-                sort_idx_k[p] = min_k
-                sort_idx_l[p] = min_l
-            ws[i + 1, j, :] = ws[i + 1, j, sort_idx_l]
-            ws[i, j + 1, :] = ws[i, j + 1, sort_idx_k]
-            vs[i + 1, j, :, :] = vs[i + 1, j, :, sort_idx_l]
-            vs[i, j + 1, :, :] = vs[i, j + 1, :, sort_idx_k]
+    for ij in ij_iter:
+        if horizontal:
+            j, i = ij
+        else:
+            i, j = ij
+        # sorting in the real direction
+        sort_idx_l = [None for _ in range(N)]
+        # sorting in the imaginary direction
+        sort_idx_k = [None for _ in range(N)]
+        for p in range(N):
+            min_cost = np.inf
+            min_k = None
+            min_l = None
+            for k in range(N):
+                for l in range(N):
+                    c_ = cost(i, j, k, l, p)
+                    if c_ < min_cost and k not in sort_idx_k and l not in sort_idx_l:
+                        min_cost = c_
+                        min_k = k
+                        min_l = l
+            sort_idx_k[p] = min_k
+            sort_idx_l[p] = min_l
+        ws[i + 1, j, :] = ws[i + 1, j, sort_idx_l]
+        ws[i, j + 1, :] = ws[i, j + 1, sort_idx_k]
+        vs[i + 1, j, :, :] = vs[i + 1, j, :, sort_idx_l]
+        vs[i, j + 1, :, :] = vs[i, j + 1, :, sort_idx_k]
 
     # remove extra points used for central finite difference
+    c = c[1:~0, :~0]
     ws = ws[1:~0, :~0, :]
     vs = vs[1:~0, :~0, :, :]
 
