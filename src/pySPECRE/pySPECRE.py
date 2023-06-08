@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple, Union
+from typing import Callable, Tuple, Union
 
 import numpy as np
 import scipy.linalg as scln
@@ -57,7 +57,10 @@ def _is_1D_array(arr: np.ndarray) -> bool:
 
 @multimethod
 def SPECRE(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     dr: Union[float, int],
     di: Union[float, int],
     rmin: Union[float, int],
@@ -74,7 +77,7 @@ def SPECRE(
 
     Parameters
     ----------
-    A : Callable[[complex], Union[np.ndarray, sp.spmatrix,
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
         spln.LinearOperator]] - the matrix function
 
     dr : float - the increment in the real part of c
@@ -110,7 +113,10 @@ def SPECRE(
 
 @multimethod
 def SPECRE(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     C: np.ndarray,
     *args,
     **kwargs
@@ -121,7 +127,7 @@ def SPECRE(
 
     Parameters
     ----------
-    A : Callable[[complex], Union[np.ndarray, sp.spmatrix,
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
         spln.LinearOperator]] - the matrix function
 
     C : np.ndarray - a 2D array of complex numbers, one axis for the real part
@@ -190,7 +196,10 @@ def SPECRE(
 
 @multimethod
 def SPECRE(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     C: np.ndarray,
     *args,
     **kwargs
@@ -201,7 +210,7 @@ def SPECRE(
 
     Parameters
     ----------
-    A : Callable[[complex], Union[np.ndarray, sp.spmatrix,
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
         spln.LinearOperator]] - the matrix function
 
     C : np.ndarray - a 1D array of complex numbers, changing only along either
@@ -266,7 +275,10 @@ def SPECRE(
 
 @multimethod
 def SPECRE(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     C_R: np.ndarray,
     C_I: np.ndarray,
     *args,
@@ -278,7 +290,7 @@ def SPECRE(
 
     Parameters
     ----------
-    A : Callable[[complex], Union[np.ndarray, sp.spmatrix,
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
         spln.LinearOperator]] - the matrix function
 
     C_R : np.ndarray - a 2D meshgrid of the C values, changing along the real
@@ -354,7 +366,10 @@ def SPECRE(
 
 @multimethod
 def SPECRE(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     c_R: np.ndarray,
     c_I: np.ndarray,
     *args,
@@ -366,7 +381,7 @@ def SPECRE(
 
     Parameters
     ----------
-    A : Callable[[complex], Union[np.ndarray, sp.spmatrix,
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
         spln.LinearOperator]] - the matrix function
 
     c_R : np.ndarray - a 1D array of the real part of the C values
@@ -410,7 +425,10 @@ def SPECRE(
 
 
 def _SPECRE_core(
-    A: Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
     dr: float,
     di: float,
     rmin: float,
@@ -490,7 +508,11 @@ def _SPECRE_core(
                 for k in range(N):
                     for l in range(N):
                         c_ = cost(i, j, k, l, p)
-                        if c_ < min_cost:
+                        if (
+                            c_ < min_cost
+                            and k not in sort_idx_k
+                            and l not in sort_idx_l
+                        ):
                             min_cost = c_
                             min_k = k
                             min_l = l
