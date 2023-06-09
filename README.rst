@@ -37,3 +37,132 @@ Contributing
 ============
 
 To install the pre-commit hooks, simply install pre-commit with ``pip3 install pre-commit`` (or use ``pip``), then in this repository ``pre-commit install`` followed by ``pre-commit run --all-files``.
+
+Documentation
+=============
+
+The ``SPECRE`` module provides a sorting algorithm for a matrix function ``A(c)`` where ``c`` is a complex number. The algorithm calculates the sorted eigenvalues and eigenvectors of ``A(c)`` for a range of ``c`` values.
+
+Functions (all overloads of one ``SPECRE`` function)
+
+1::
+
+    def SPECRE(
+        A: Union[
+            Callable,
+            Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+        ],
+        dr: Union[float, int],
+        di: Union[float, int],
+        rmin: Union[float, int],
+        rmax: Union[float, int],
+        imin: Union[float, int],
+        imax: Union[float, int],
+        horizontal: bool = True,
+        *args,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ...
+
+2::
+
+    def SPECRE(
+        A: Union[
+            Callable,
+            Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+        ],
+        C: np.ndarray,
+        horizontal: bool = True,
+        *args,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ...
+
+
+3::
+
+    def SPECRE(
+        A: Union[
+            Callable,
+            Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+        ],
+        C_R: np.ndarray,
+        C_I: np.ndarray,
+        horizontal: bool = True,
+        *args,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ...
+
+4::
+
+    def SPECRE(
+        A: Union[
+            Callable,
+            Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+        ],
+        c_R: np.ndarray,
+        c_I: np.ndarray,
+        horizontal: bool = True,
+        *args,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ...
+
+
+This function is overloaded and provides different ways to call the sorting algorithm. It takes a matrix function ``A(c)`` as the first argument, where ``c`` is a complex number. The function calculates the sorted eigenvalues and eigenvectors of ``A(c)`` for a range of ``c`` values.
+
+The different versions of the function allow different ways to specify the ``c`` values:
+
+- Version 1:
+    - ``dr``: Increment in the real part of ``c``.
+    - ``di``: Increment in the imaginary part of ``c``.
+    - ``rmin``: Minimum value of the real part of ``c``.
+    - ``rmax``: Maximum value of the real part of ``c``.
+    - ``imin``: Minimum value of the imaginary part of ``c``.
+    - ``imax``: Maximum value of the imaginary part of ``c``.
+    - ``horizontal``: Whether to sweep horizontally or vertically (default is ``True``).
+    - ``*args``, ``**kwargs``: Additional arguments to pass to the eigensolver.
+    - Returns a tuple (C, ws, vs)``:
+        - ``C``: 2D numpy array representing the meshgrid of ``c`` values, indexed by ``C[real_idx, imag_idx]``.
+        - ``ws``: 3D numpy array representing the meshgrid of sorted eigenvalues of ``A(c)``, indexed by ``ws[real_idx, imag_idx, eigenvalue_idx]``.
+        - ``vs``: 4D numpy array representing the meshgrid of sorted eigenvectors of ``A(c)``, indexed by ``vs[real_idx, imag_idx, :, eigenvector_idx]``.
+
+- Version 2:
+    - ``C``: 2D numpy array representing the meshgrid of ``c`` values, indexed by ``C[real_idx, imag_idx]``.
+    - ``horizontal``: Whether to sweep horizontally or vertically (default is ``True``).
+    - ``*args``, ``**kwargs``: Additional arguments to pass to the eigensolver.
+    - Returns a tuple ``(C, ws, vs)``:
+        - ``C``: 2D numpy array representing the meshgrid of ``c`` values, indexed by ``C[real_idx, imag_idx]``.
+        - ``ws``: 3D numpy array representing the meshgrid of sorted eigenvalues of ``A(c)``, indexed by ``ws[real_idx, imag_idx, eigenvalue_idx]``.
+        - ``vs``: 4D numpy array representing the meshgrid of sorted eigenvectors of ``A(c)``, indexed by ``vs[real_idx, imag_idx, :, eigenvector_idx]``.
+
+- Version 3:
+    - ``C_R``: 1D numpy array representing the real part of ``c`` values.
+    - ``C_I``: 1D numpy array representing the imaginary part of ``c`` values.
+    - ``horizontal``: Whether to sweep horizontally or vertically (default is ``True``).
+    - ``*args``, ``**kwargs``: Additional arguments to pass to the eigensolver.
+    - Returns a tuple ``(C, ws, vs)``:
+        - ``C``: 2D numpy array representing the meshgrid of ``c`` values, indexed by ``C[real_idx, imag_idx]``.
+        - ``ws``: 3D numpy array representing the meshgrid of sorted eigenvalues of ``A(c)``, indexed by ``ws[real_idx, imag_idx, eigenvalue_idx]``.
+        - ``vs``: 4D numpy array representing the meshgrid of sorted eigenvectors of ``A(c)``, indexed by ``vs[real_idx, imag_idx, :, eigenvector_idx]``.
+
+- Version 4:
+    - ``c_R``: 1D numpy array representing the real part of ``c`` values.
+    - ``c_I``: 1D numpy array representing the imaginary part of ``c`` values.
+    - ``horizontal``: Whether to sweep horizontally or vertically (default is ``True``).
+    - ``*args``, ``**kwargs``: Additional arguments to pass to the eigensolver.
+    - Returns a tuple ``(C, ws, vs)``:
+        - ``C``: 2D numpy array representing the meshgrid of ``c`` values, indexed by ``C[real_idx, imag_idx]``.
+        - ``ws``: 3D numpy array representing the meshgrid of sorted eigenvalues of ``A(c)``, indexed by ``ws[real_idx, imag_idx, eigenvalue_idx]``.
+        - ``vs``: 4D numpy array representing the meshgrid of sorted eigenvectors of ``A(c)``, indexed by ``vs[real_idx, imag_idx, :, eigenvector_idx]``.
+
+Usage
+=====
+::
+
+    from pySPECRE import pySPECRE
+
+    pySPECRE.SPECRE(...)
+
+
