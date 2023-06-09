@@ -160,7 +160,8 @@ def SPECRE(
 
     # assert that C is 2D
     if not _is_2D_array(C):
-        raise ValueError("C must be a 2D array")
+        # raise ValueError("C must be a 2D array")
+        return __1D_SPECRE(A, C, *args, **kwargs)
 
     # verify that the stepsizes along each axis are constant, but not
     # necessarily the same
@@ -208,93 +209,96 @@ def SPECRE(
 """
     Until PEP646 is fully supported by numpy, mypy, and multimethod, this
     overload will not work since there is no way to typehint the number of
-    dimensions of an array.
+    dimensions of an array. Instead, this overload is just called manually from
+    the other one of (currently) matching signature
 
     This should happen in Python 3.11
 """
+
+
 # @multimethod
-# def SPECRE(
-#     A: Union[
-#         Callable,
-#         Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
-#     ],
-#     C: np.ndarray,
-#     horizontal: bool = True,
-#     *args,
-#     **kwargs
-# ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-#     """
-#     SPECRE sorting algorithm on a matrix function A(c) for an array of complex
-#     values C
-#
-#     Parameters
-#     ----------
-#     A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
-#         spln.LinearOperator]] - the matrix function
-#
-#     C : np.ndarray - a 1D array of complex numbers, changing only along either
-#         the real or imaginary axis, not both.
-#
-#     horizontal : bool - whether to sweep horizontally or vertically
-#         (Default: True)
-#
-#     *args, **kwargs : additional arguments to pass to the eigensolver
-#
-#     Returns
-#     -------
-#
-#     C : 2D np.ndarray - the meshgrid of c values,
-#         indexed by C[real_idx, imag_idx]
-#
-#     ws : 3D np.ndarray - the meshgrid of sorted eigenvalues of A(C), indexed by
-#         ws[real_idx, imag_idx, eigenvalue_idx]
-#
-#     vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
-#         by vs[real_idx, imag_idx, :, eigenvector_idx]
-#     """
-#
-#     # assert that C is 1D
-#     if not _is_1D_array(C):
-#         raise ValueError("C must be a 1D array")
-#
-#     # verify that the stepsize is constant
-#     d = np.diff(C)
-#     if not np.allclose(d, d[0]):
-#         raise ValueError("C must have constant stepsize")
-#
-#     d = d[0]
-#
-#     # verify that the stepsize is either purely real or purely imaginary
-#     if d.real != 0 and d.imag != 0:
-#         raise ValueError(
-#             "1D C must change along only the real or imaginary axis, not both"
-#         )
-#
-#     # figure out which axis C is changing along
-#     if d.real == 0:
-#         real_only = False
-#         di = d.imag
-#         dr = _DEFAULT_DR
-#     else:
-#         real_only = True
-#         dr = d.real
-#         di = _DEFAULT_DI
-#
-#     dr, di = abs(dr), abs(di)
-#
-#     # get the min and max values of the real and imaginary parts of C
-#     rmin, rmax = C.real.min(), C.real.max()
-#     imin, imax = C.imag.min(), C.imag.max()
-#
-#     # pass to core
-#     C, ws, vs = _SPECRE_core(
-#         A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs
-#     )
-#
-#     if real_only:
-#         return C[:, 0], ws[:, 0, :], vs[:, 0, :, :]
-#     else:
-#         return C[0, :], ws[0, :, :], vs[0, :, :, :]
+def __1D_SPECRE(
+    A: Union[
+        Callable,
+        Callable[[complex], Union[np.ndarray, sp.spmatrix, spln.LinearOperator]],
+    ],
+    C: np.ndarray,
+    horizontal: bool = True,
+    *args,
+    **kwargs
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    SPECRE sorting algorithm on a matrix function A(c) for an array of complex
+    values C
+
+    Parameters
+    ----------
+    A : Union[Callable, Callable[[complex], Union[np.ndarray, sp.spmatrix],
+        spln.LinearOperator]] - the matrix function
+
+    C : np.ndarray - a 1D array of complex numbers, changing only along either
+        the real or imaginary axis, not both.
+
+    horizontal : bool - whether to sweep horizontally or vertically
+        (Default: True)
+
+    *args, **kwargs : additional arguments to pass to the eigensolver
+
+    Returns
+    -------
+
+    C : 2D np.ndarray - the meshgrid of c values,
+        indexed by C[real_idx, imag_idx]
+
+    ws : 3D np.ndarray - the meshgrid of sorted eigenvalues of A(C), indexed by
+        ws[real_idx, imag_idx, eigenvalue_idx]
+
+    vs : 4D np.ndarray - the meshgrid of sorted eigenvectors of A(C), indexed
+        by vs[real_idx, imag_idx, :, eigenvector_idx]
+    """
+
+    # assert that C is 1D
+    if not _is_1D_array(C):
+        raise ValueError("C must be a 1D array")
+
+    # verify that the stepsize is constant
+    d = np.diff(C)
+    if not np.allclose(d, d[0]):
+        raise ValueError("C must have constant stepsize")
+
+    d = d[0]
+
+    # verify that the stepsize is either purely real or purely imaginary
+    if d.real != 0 and d.imag != 0:
+        raise ValueError(
+            "1D C must change along only the real or imaginary axis, not both"
+        )
+
+    # figure out which axis C is changing along
+    if d.real == 0:
+        real_only = False
+        di = d.imag
+        dr = _DEFAULT_DR
+    else:
+        real_only = True
+        dr = d.real
+        di = _DEFAULT_DI
+
+    dr, di = abs(dr), abs(di)
+
+    # get the min and max values of the real and imaginary parts of C
+    rmin, rmax = C.real.min(), C.real.max()
+    imin, imax = C.imag.min(), C.imag.max()
+
+    # pass to core
+    C, ws, vs = _SPECRE_core(
+        A, dr, di, rmin, rmax, imin, imax, horizontal, *args, **kwargs
+    )
+
+    if real_only:
+        return C[:, 0], ws[:, 0, :], vs[:, 0, :, :]
+    else:
+        return C[0, :], ws[0, :, :], vs[0, :, :, :]
 
 
 @multimethod
@@ -520,8 +524,13 @@ def _SPECRE_core(
 
         # central finite difference for the real part
         dwdcr = (ws[i + 1, j, l] - ws[i - 1, j, p]) / (2 * dr)
-        # forward finite difference for the imaginary part
-        dwdci = (ws[i, j + 1, k] - ws[i, j, p]) / (di)
+
+        if j >= 1:
+            # forward finite difference for the imaginary part
+            dwdci = (ws[i, j + 1, k] - ws[i, j - 1, p]) / (2 * di)
+        else:
+            # central finite difference for the imaginary part
+            dwdci = (ws[i, j + 1, k] - ws[i, j, p]) / (di)
 
         CR_residue = np.abs(np.real(dwdcr) - np.imag(dwdci)) + np.abs(
             np.real(dwdci) + np.imag(dwdcr)
