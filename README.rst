@@ -41,7 +41,7 @@ To install the pre-commit hooks, simply install pre-commit with ``pip3 install p
 Documentation
 =============
 
-The ``SPECRE`` module provides a sorting algorithm for a matrix function ``A(c)`` where ``c`` is a complex number. The algorithm calculates the sorted eigenvalues and eigenvectors of ``A(c)`` for a range of ``c`` values.
+The ``pySPECRE`` module provides a sorting algorithm for a matrix function ``A(c)`` where ``c`` is a complex number. The algorithm calculates the sorted eigenvalues and eigenvectors of ``A(c)`` for a range of ``c`` values.
 
 Functions (all overloads of one ``SPECRE`` function)
 
