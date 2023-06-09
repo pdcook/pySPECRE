@@ -523,7 +523,7 @@ def _SPECRE_core(
         return CR_residue
 
     i_range = range(1, n - 1)
-    j_range = range(m - 1)
+    j_range = range(0, m - 1)
 
     # sweep direction
     if horizontal:
