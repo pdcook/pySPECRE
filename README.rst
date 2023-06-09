@@ -138,8 +138,11 @@ The different versions of the function allow different ways to specify the ``c``
         - ``vs``: 4D numpy array representing the meshgrid of sorted eigenvectors of ``A(c)``, indexed by ``vs[real_idx, imag_idx, :, eigenvector_idx]``.
 
 - Version 3:
-    - ``C_R``: 1D numpy array representing the real part of ``c`` values.
-    - ``C_I``: 1D numpy array representing the imaginary part of ``c`` values.
+    - ``C_R``: np.ndarray - a 2D meshgrid of the ``c`` values, changing along the real
+        axis
+
+    - ``C_I``: np.ndarray - a 2D meshgrid of the ``c`` values, changing along the
+        imaginary axis
     - ``horizontal``: Whether to sweep horizontally or vertically (default is ``True``).
     - ``*args``, ``**kwargs``: Additional arguments to pass to the eigensolver.
     - Returns a tuple ``(C, ws, vs)``:
