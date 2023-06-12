@@ -507,11 +507,11 @@ def _SPECRE_core(
     vs = [[None for _ in range(m)] for _ in range(n)]
     # vs is indexed as vs[i][j] = v(c_r[i] + 1j * c_i[j])
 
-    # compute eigenvalues at every c, sorted only by imaginary part
+    # compute eigenvalues at every c, sorted only by real part
     for i in range(n):
         for j in range(m):
             ws[i][j], vs[i][j] = _get_eigensystem(A(c[i, j]))
-            sort_idx = np.argsort(ws[i][j].imag)
+            sort_idx = np.argsort(ws[i][j].real)
             ws[i][j] = np.array(ws[i][j])[sort_idx]
             vs[i][j] = np.array(vs[i][j])[:, sort_idx]
 
@@ -526,10 +526,10 @@ def _SPECRE_core(
         dwdcr = (ws[i + 1, j, l] - ws[i - 1, j, p]) / (2 * dr)
 
         if j >= 1:
-            # forward finite difference for the imaginary part
+            # central finite difference for the imaginary part
             dwdci = (ws[i, j + 1, k] - ws[i, j - 1, p]) / (2 * di)
         else:
-            # central finite difference for the imaginary part
+            # forward finite difference for the imaginary part
             dwdci = (ws[i, j + 1, k] - ws[i, j, p]) / (di)
 
         CR_residue = np.abs(np.real(dwdcr) - np.imag(dwdci)) + np.abs(
