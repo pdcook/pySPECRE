@@ -165,8 +165,8 @@ def SPECRE(
 
     # verify that the stepsizes along each axis are constant, but not
     # necessarily the same
-    d1 = np.diff(C.real, axis=0)
-    d2 = np.diff(C.imag, axis=1)
+    d1 = np.diff(C, axis=0)
+    d2 = np.diff(C, axis=1)
     if not np.allclose(d1, d1[0, 0]) or not np.allclose(d2, d2[0, 0]):
         raise ValueError("C must have constant stepsizes along each axis")
 
